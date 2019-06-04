@@ -368,8 +368,6 @@ hints.ai_protocol = IPPROTO_TCP;
 		   printBuffer("SEND_BUFFER", send_buffer);
 		   printf("Message length: %d \n",(int)strlen(send_buffer));
 
-		   
-	       strcat(send_buffer,"\r\n");
 
 
 	//*******************************************************************
@@ -378,13 +376,17 @@ hints.ai_protocol = IPPROTO_TCP;
 
 	       memset(&temp_buffer, 0, BUFFER_SIZE*5);
 	       temp_buffer[0]='\0';
+	       int ix;
 	       for(int i = 0; i < strlen(send_buffer); i++){
 	       		long tempL = send_buffer[i];
 	       		tempL = repeatSquare(tempL, E, N); //Encryption
 	       		char temp[6];
 	       		sprintf(temp, "%d,", tempL);
-	       		strcat(temp_buffer, temp);
+	       		strcat(temp_buffer, temp);\
+	       		ix = i;
 	       	}
+	       	strcat(temp_buffer, "");
+	       	strcat(temp_buffer,"\r\n");
 
 
 	//*******************************************************************

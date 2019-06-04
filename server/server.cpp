@@ -60,6 +60,22 @@ void printBuffer(const char *header, char *buffer){
   cout << "---" << endl;
 }
 
+long repeatSquare(long x, long e, long n) {
+
+  long y=1;//initialize y to 1, very important
+  while (e >  0) {
+    if (( e % 2 ) == 0) {
+      x = (x*x) % n;
+      e = e/2;
+    }
+    else {
+      y = (x*y) % n;
+      e = e-1;
+    }
+  }
+  return y; //the result is stored in y
+}
+
 //Variables
 long N = 8633;
 long D = 1207;
@@ -85,7 +101,7 @@ int main(int argc, char *argv[]) {
 
 #define BUFFER_SIZE 200 
 
-  char send_buffer[BUFFER_SIZE],receive_buffer[BUFFER_SIZE];
+  char send_buffer[BUFFER_SIZE],receive_buffer[BUFFER_SIZE], decrypted_buffer[BUFFER_SIZE];
   int  n,bytes,addrlen;
 	char portNum[NI_MAXSERV];
 	char username[80];
@@ -422,34 +438,43 @@ while (1) {  //main loop
 //********************************************************************
 //RECEIVE one command (delimited by \r\n)
 //********************************************************************
-         while (1) {
-
+          while (1) {
             bytes = recv(ns, &receive_buffer[n], 1, 0);
 
+
 #if defined __unix__ || defined __APPLE__      
-      if ((bytes == -1) || (bytes == 0)) break;
+            if ((bytes == -1) || (bytes == 0)){
+              break;
+            }
+
       
 #elif defined _WIN32      
-      if ((bytes == SOCKET_ERROR) || (bytes == 0)) break;
+            if ((bytes == SOCKET_ERROR) || (bytes == 0)){
+              break;
+            }
 #endif
-
             if (receive_buffer[n] == '\n') { /*end on a LF, Note: LF is equal to one character*/  
                receive_buffer[n] = '\0';
-               break;
+                break;
             }
             if (receive_buffer[n] != '\r') n++; /*ignore CRs*/
-         }
+          }
 
 //this will handle the case when the user quits (types '.')
 #if defined __unix__ || defined __APPLE__      
-      if ((bytes == -1) || (bytes == 0)) break;
+      if ((bytes == -1) || (bytes == 0)){
+        break;
+     } 
 #elif defined _WIN32      
-      if ((bytes == SOCKET_ERROR) || (bytes == 0)) break;
+      if ((bytes == SOCKET_ERROR) || (bytes == 0)) {
+        break;
+     }
  #endif
 
 //********************************************************************
 //PROCESS REQUEST
-//********************************************************************      
+//******************************************************************** 
+         printf("Brah wtf\n");     
          printBuffer("RECEIVE_BUFFER", receive_buffer);
          printf("\nMSG RECEIVED <<<--- :%s\n",receive_buffer);
          
@@ -458,6 +483,25 @@ while (1) {  //main loop
          memset(&send_buffer, 0, BUFFER_SIZE);
 
          sprintf(send_buffer, "The Client typed '%s' - %d bytes of information\r\n", receive_buffer, n);
+
+
+         memset(&decrypted_buffer, 0, BUFFER_SIZE);
+         char * token;
+         token = strtok(receive_buffer, ",");
+         int i =0;
+         while(token != NULL){
+            long temp = atol(token);
+            char c = repeatSquare(temp, D, N);
+            decrypted_buffer[i] = c;
+            token = strtok(NULL, ",");
+            i++;
+         }
+
+         printBuffer("DECRYPTED BUFFER", decrypted_buffer);
+
+
+
+
 
 //SEND
 //********************************************************************         
