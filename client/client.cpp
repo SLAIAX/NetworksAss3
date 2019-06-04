@@ -63,6 +63,27 @@ void printBuffer(const char *header, char *buffer){
 	cout << "---" << endl;
 }
 
+long repeatSquare(long x, long e, long n) {
+
+	long y=1;//initialize y to 1, very important
+	while (e >  0) {
+		if (( e % 2 ) == 0) {
+			x = (x*x) % n;
+			e = e/2;
+		}
+		else {
+			y = (x*y) % n;
+			e = e-1;
+		}
+	}
+	return y; //the result is stored in y
+}
+
+// Variables
+long N = 8633;
+long E = 7;
+
+
 /////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[]) {
 //*******************************************************************
@@ -84,7 +105,9 @@ int main(int argc, char *argv[]) {
 //segment size, i.e., if fgets gets more than this number of bytes it segments the message
 
    char send_buffer[BUFFER_SIZE],receive_buffer[BUFFER_SIZE];
-   int n,bytes;
+   char temp_buffer[BUFFER_SIZE*5];
+   int n;
+   ssize_t bytes;
 	
    char serverHost[NI_MAXHOST]; 
    char serverService[NI_MAXSERV];
@@ -347,12 +370,31 @@ hints.ai_protocol = IPPROTO_TCP;
 
 		   
 	       strcat(send_buffer,"\r\n");
+
+
+	//*******************************************************************
+	//OUR ADDITIONS
+	//*******************************************************************
+
+	       memset(&temp_buffer, 0, BUFFER_SIZE*5);
+	       temp_buffer[0]='\0';
+	       for(int i = 0; i < strlen(send_buffer); i++){
+	       		long tempL = send_buffer[i];
+	       		tempL = repeatSquare(tempL, E, N); //Encryption
+	       		char temp[6];
+	       		sprintf(temp, "%d,", tempL);
+	       		strcat(temp_buffer, temp);
+	       	}
+
+
 	//*******************************************************************
 	//SEND
 	//*******************************************************************
 
-	       bytes = send(s, send_buffer, strlen(send_buffer),0);
-	       printf("\nMSG SENT     --->>>: %s\n",send_buffer);//line sent 
+	       bytes = send(s, temp_buffer, strlen(temp_buffer),0);
+	       printf("\nMSG SENT     --->>>: %s\n",send_buffer); //line sent 
+	       printf("\nENCRYPTION --->>>: %s\n", temp_buffer);
+	       
 	       
 
 #if defined __unix__ || defined __APPLE__     
