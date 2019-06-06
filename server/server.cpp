@@ -72,13 +72,16 @@ long repeatSquare(long x, long e, long n) {
       y = (x*y) % n;
       e = e-1;
     }
-  }
+  } 
   return y; //the result is stored in y
 }
 
 //Variables
-long N = 8633;
-long D = 1207;
+long nCA = 8633;
+long dCA = 1207;
+long eSERV = 27;
+long nSERV = 29893;
+long dSERV = 8755;
 
 //*******************************************************************
 //MAIN
@@ -420,8 +423,43 @@ while (1) {  //main loop
 
 #endif 	
 
+// encrypt dCA(eSERV, nSERV)
 
-  
+  char encrypted_pub_key_buffer[BUFFER_SIZE];
+  memset(&encrypted_pub_key_buffer, 0, BUFFER_SIZE);
+  encrypted_pub_key_buffer[0]='\0';
+  long encrypted_e_serv = repeatSquare(eSERV, dCA, nCA);
+  printf("nSERV = %ld", nSERV);
+  long encrypted_n_serv = repeatSquare(nSERV, dCA, nCA);
+  char tempE[6];
+  char tempN[6];
+  sprintf(tempE, "%ld,", encrypted_e_serv);
+  sprintf(tempN, "%ld", encrypted_n_serv);
+  strcat(encrypted_pub_key_buffer, tempE);
+  strcat(encrypted_pub_key_buffer, tempN);
+  strcat(encrypted_pub_key_buffer, "");
+  strcat(encrypted_pub_key_buffer,"\r\n");
+
+  printBuffer("ENCRYPTED PUB BUFFER", encrypted_pub_key_buffer);
+
+// Send to client
+  memset(&send_buffer, 0, BUFFER_SIZE);
+  sprintf(send_buffer, "%s", encrypted_pub_key_buffer);
+  bytes = send(ns, send_buffer, strlen(send_buffer), 0);
+#if defined __unix__ || defined __APPLE__      
+         if ((bytes == -1) || (bytes == 0)) break;
+#elif defined _WIN32      
+         if ((bytes == SOCKET_ERROR) || (bytes == 0)) break;
+#endif
+         printf("\nMSG SENT     --->>> :%s\n",send_buffer);
+         memset(&send_buffer,0,BUFFER_SIZE);
+
+// RECV ACK
+
+// RECV Nonce
+// ACK NONCE
+// Save nonce
+
 		
 //********************************************************************		
 //Communicate with the Client
@@ -474,7 +512,7 @@ while (1) {  //main loop
 //********************************************************************
 //PROCESS REQUEST
 //******************************************************************** 
-         printf("Brah wtf\n");     
+
          printBuffer("RECEIVE_BUFFER", receive_buffer);
          printf("\nMSG RECEIVED <<<--- :%s\n",receive_buffer);
          
@@ -491,7 +529,7 @@ while (1) {  //main loop
          int i =0;
          while(token != NULL){
             long temp = atol(token);
-            char c = repeatSquare(temp, D, N);
+            char c = repeatSquare(temp, dSERV, nSERV);
             decrypted_buffer[i] = c;
             token = strtok(NULL, ",");
             i++;

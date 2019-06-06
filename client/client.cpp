@@ -80,8 +80,10 @@ long repeatSquare(long x, long e, long n) {
 }
 
 // Variables
-long N = 8633;
-long E = 7;
+long nCA = 8633;
+long eCA = 7;
+long nSERV;
+long eSERV;
 
 
 /////////////////////////////////////////////////////////////////////
@@ -349,6 +351,51 @@ hints.ai_protocol = IPPROTO_TCP;
 		//--------------------------------------------------------------------------------
 		
 	}
+
+	// Receive nSERV and eSERV
+	memset(receive_buffer, 0, strlen(receive_buffer));
+	n = 0;
+	while (1) {
+	bytes = recv(s, &receive_buffer[n], 1, 0);
+
+#if defined __unix__ || defined __APPLE__  
+		     if ((bytes == -1) || (bytes == 0)) {
+	            printf("recv failed\n");
+	         	exit(1);
+	         }   
+      
+#elif defined _WIN32      
+             if ((bytes == SOCKET_ERROR) || (bytes == 0)) {
+	            printf("recv failed\n");
+	         	exit(1);
+	         }
+#endif
+
+	         
+	         if (receive_buffer[n] == '\n') {  /*end on a LF*/
+	            receive_buffer[n] = '\0';
+	            break;
+	         }
+	         if (receive_buffer[n] != '\r') n++;   /*ignore CR's*/
+	}
+	      
+	printf("MSG RECEIVED --->>>: %s\n",receive_buffer);
+	// DECRYPT eSERV and nSERV
+
+	long tempE, tempN;
+	sscanf(receive_buffer, "%ld,%ld", &tempE, &tempN);
+	eSERV = repeatSquare(tempE, eCA, nCA);
+	nSERV = repeatSquare(tempN, eCA, nCA);
+
+	printf("eSERV %ld nSERV %ld\n", eSERV, nSERV);
+
+	// ACK receipt
+
+
+
+	// Generate nonce
+	// Send nonce
+	// RECV ACK for nonce 
 	
 //*******************************************************************
 //Get input while user don't type "."
@@ -379,10 +426,10 @@ hints.ai_protocol = IPPROTO_TCP;
 	       int ix;
 	       for(int i = 0; i < strlen(send_buffer); i++){
 	       		long tempL = send_buffer[i];
-	       		tempL = repeatSquare(tempL, E, N); //Encryption
+	       		tempL = repeatSquare(tempL, eSERV, nSERV); //Encryption
 	       		char temp[6];
 	       		sprintf(temp, "%d,", tempL);
-	       		strcat(temp_buffer, temp);\
+	       		strcat(temp_buffer, temp);
 	       		ix = i;
 	       	}
 	       	strcat(temp_buffer, "");
