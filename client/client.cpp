@@ -27,11 +27,13 @@
   #include <netdb.h> //used by getnameinfo()
   #include <cstdio>
   #include <iostream>
+  #include <time.h>
 #elif defined _WIN32
   #include <winsock2.h>
   #include <ws2tcpip.h> //required by getaddrinfo() and special constants
   #include <stdlib.h>
   #include <stdio.h>
+  #include <time.h>
   #include <cstdio>
   #include <iostream>
   #define WSVERS MAKEWORD(2,2) /* Use the MAKEWORD(lowbyte, highbyte) macro declared in Windef.h */
@@ -379,21 +381,34 @@ hints.ai_protocol = IPPROTO_TCP;
 	         if (receive_buffer[n] != '\r') n++;   /*ignore CR's*/
 	}
 	      
-	printf("MSG RECEIVED --->>>: %s\n",receive_buffer);
+	printf("\nRECEIVING PUBLIC KEY FROM SERVER...\n\nDECRYPTING PUBLIC KEY FROM SERVER...\n");
 	// DECRYPT eSERV and nSERV
 
-	long tempE, tempN;
-	sscanf(receive_buffer, "%ld,%ld", &tempE, &tempN);
-	eSERV = repeatSquare(tempE, eCA, nCA);
-	nSERV = repeatSquare(tempN, eCA, nCA);
+	memset(&temp_buffer, 0, BUFFER_SIZE*5);
+	char * token;
+	token = strtok(receive_buffer, ",");
+	int i = 0;
+	while(token != NULL){
+	    long temp = atol(token);
+	    char c = repeatSquare(temp, eCA, nCA);
+	    temp_buffer[i] = c;
+	    token = strtok(NULL, ",");
+	    i++;
+    }
 
-	printf("eSERV %ld nSERV %ld\n", eSERV, nSERV);
+    sscanf(temp_buffer, "%ld,%ld", &eSERV, &nSERV);
 
 	// ACK receipt
-
-
-
+	printf("\nACKNOWLEDGING RECEIPT OF KEY...\n");
 	// Generate nonce
+
+	srand(time(NULL));
+	for(int ix=0; ix < 100; ix++ ){
+	int nonce = rand() % 15 + 1;
+	printf("Nonce %d\n", nonce);
+	}
+
+
 	// Send nonce
 	// RECV ACK for nonce 
 	
@@ -423,14 +438,12 @@ hints.ai_protocol = IPPROTO_TCP;
 
 	       memset(&temp_buffer, 0, BUFFER_SIZE*5);
 	       temp_buffer[0]='\0';
-	       int ix;
 	       for(int i = 0; i < strlen(send_buffer); i++){
 	       		long tempL = send_buffer[i];
 	       		tempL = repeatSquare(tempL, eSERV, nSERV); //Encryption
 	       		char temp[6];
 	       		sprintf(temp, "%d,", tempL);
 	       		strcat(temp_buffer, temp);
-	       		ix = i;
 	       	}
 	       	strcat(temp_buffer, "");
 	       	strcat(temp_buffer,"\r\n");

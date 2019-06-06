@@ -428,19 +428,21 @@ while (1) {  //main loop
   char encrypted_pub_key_buffer[BUFFER_SIZE];
   memset(&encrypted_pub_key_buffer, 0, BUFFER_SIZE);
   encrypted_pub_key_buffer[0]='\0';
-  long encrypted_e_serv = repeatSquare(eSERV, dCA, nCA);
-  printf("nSERV = %ld", nSERV);
-  long encrypted_n_serv = repeatSquare(nSERV, dCA, nCA);
-  char tempE[6];
-  char tempN[6];
-  sprintf(tempE, "%ld,", encrypted_e_serv);
-  sprintf(tempN, "%ld", encrypted_n_serv);
-  strcat(encrypted_pub_key_buffer, tempE);
-  strcat(encrypted_pub_key_buffer, tempN);
+
+  char temp_buffer[BUFFER_SIZE];
+  memset(&temp_buffer, 0, strlen(temp_buffer));
+  sprintf(temp_buffer, "%ld,%ld", eSERV, nSERV);
+
+  for(int i = 0; i < strlen(temp_buffer); i++){
+    long tempL = temp_buffer[i];
+    tempL = repeatSquare(tempL, dCA, nCA); 
+    char temp[6];
+    sprintf(temp, "%d,", tempL);
+    strcat(encrypted_pub_key_buffer, temp);
+  }
+
   strcat(encrypted_pub_key_buffer, "");
   strcat(encrypted_pub_key_buffer,"\r\n");
-
-  printBuffer("ENCRYPTED PUB BUFFER", encrypted_pub_key_buffer);
 
 // Send to client
   memset(&send_buffer, 0, BUFFER_SIZE);
@@ -451,14 +453,17 @@ while (1) {  //main loop
 #elif defined _WIN32      
          if ((bytes == SOCKET_ERROR) || (bytes == 0)) break;
 #endif
-         printf("\nMSG SENT     --->>> :%s\n",send_buffer);
+         printf("\nSENDING PUBLIC KEY TO CLIENT...\n");
          memset(&send_buffer,0,BUFFER_SIZE);
 
 // RECV ACK
 
 // RECV Nonce
+// Save nonce         
+
 // ACK NONCE
-// Save nonce
+
+
 
 		
 //********************************************************************		
