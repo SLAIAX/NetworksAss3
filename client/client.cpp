@@ -444,8 +444,10 @@ hints.ai_protocol = IPPROTO_TCP;
 		   int random = nonce;
 		   for(int i = 0; i < strlen(temp_buffer); i++){
 		   	 	char a = temp_buffer[i] ^ (random << 4);
+		   	 	a = a & 0xF0;
 		   	 	char b = temp_buffer[i] ^ (random);
-		   	 	binary_buffer[i] = a ^ b;
+		   	 	b = b & 0x0F;
+		   	 	binary_buffer[i] = (a | b);
 		   	 	random = b;
 		   }
 
