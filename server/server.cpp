@@ -574,7 +574,7 @@ while (1) {  //main loop
           char a = decrypted_buffer[i] ^ (random << 4);
           a = a & 0xF0;
           char b = decrypted_buffer[i] ^ (random);
-          a = a & 0x0F;
+          b = b & 0x0F;
           temp_buffer[i] = (a | b);
           random = b;
         }
