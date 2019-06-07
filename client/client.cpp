@@ -400,16 +400,19 @@ hints.ai_protocol = IPPROTO_TCP;
 
 	// ACK receipt
 	printf("\nACKNOWLEDGING RECEIPT OF KEY...\n");
+
 	// Generate nonce
 
 	srand(time(NULL));
 	int nonce = rand() % 15 + 1;
-	memset(&send_buffer, 0, BUFFER_SIZE);
-	sprintf(send_buffer, "%ld", repeatSquare(nonce, eSERV, nSERV));
-	bytes = send(s, send_buffer, strlen(send_buffer), 0);
-
 
 	// Send nonce
+	memset(&send_buffer, 0, BUFFER_SIZE);
+	sprintf(send_buffer, "%ld\r\n", repeatSquare(nonce, eSERV, nSERV));
+	bytes = send(s, send_buffer, strlen(send_buffer), 0);
+
+	printf("\nSENDING NONCE...\n");
+	
 	// RECV ACK for nonce 
 	
 //*******************************************************************
@@ -418,17 +421,17 @@ hints.ai_protocol = IPPROTO_TCP;
 	printf("\n--------------------------------------------\n");
 	printf("you may now start sending commands to the <<<SERVER>>>\n");
 	printf("\nType here:");
-	memset(&send_buffer,0,BUFFER_SIZE);
-    if(fgets(send_buffer,SEGMENT_SIZE,stdin) == NULL){
+	memset(&temp_buffer,0,BUFFER_SIZE);
+    if(fgets(temp_buffer,SEGMENT_SIZE,stdin) == NULL){
 		printf("error using fgets()\n");
 		exit(1);
 	}
     
 	//while ((strncmp(send_buffer,".",1) != 0) && (strncmp(send_buffer,"\n",1) != 0)) {
-	while ((strncmp(send_buffer,".",1) != 0)) {
-		   send_buffer[strlen(send_buffer)-1]='\0';//strip '\n'
-		   printBuffer("SEND_BUFFER", send_buffer);
-		   printf("Message length: %d \n",(int)strlen(send_buffer));
+	while ((strncmp(temp_buffer,".",1) != 0)) {
+		   send_buffer[strlen(temp_buffer)-1]='\0';//strip '\n'
+		   printBuffer("SEND_BUFFER", temp_buffer);
+		   printf("Message length: %d \n",(int)strlen(temp_buffer));
 
 
 
@@ -436,26 +439,36 @@ hints.ai_protocol = IPPROTO_TCP;
 	//OUR ADDITIONS
 	//*******************************************************************
 
-	       memset(&temp_buffer, 0, BUFFER_SIZE*5);
-	       temp_buffer[0]='\0';
-	       for(int i = 0; i < strlen(send_buffer); i++){
-	       		long tempL = send_buffer[i];
+		   char binary_buffer[BUFFER_SIZE];
+		   memset(binary_buffer, 0, BUFFER_SIZE);
+		   int random = nonce;
+		   for(int i = 0; i < strlen(temp_buffer); i++){
+		   	 	char a = temp_buffer[i] ^ (random << 4);
+		   	 	char b = temp_buffer[i] ^ (random);
+		   	 	binary_buffer[i] = a ^ b;
+		   	 	random = b;
+		   }
+
+		   printBuffer("BINARY BUFFER", binary_buffer);
+	       
+	       memset(temp_buffer, 0, strlen(temp_buffer));
+	       for(int i = 0; i < strlen(binary_buffer); i++){
+	       		long tempL = binary_buffer[i];
 	       		tempL = repeatSquare(tempL, eSERV, nSERV); //Encryption
 	       		char temp[6];
-	       		sprintf(temp, "%d,", tempL);
+	       		sprintf(temp, "%ld,", tempL);
 	       		strcat(temp_buffer, temp);
 	       	}
 	       	strcat(temp_buffer, "");
 	       	strcat(temp_buffer,"\r\n");
-
+	       	sprintf(send_buffer, "%s", temp_buffer);
 
 	//*******************************************************************
 	//SEND
 	//*******************************************************************
 
-	       bytes = send(s, temp_buffer, strlen(temp_buffer),0);
+	       bytes = send(s, send_buffer, strlen(send_buffer),0);
 	       printf("\nMSG SENT     --->>>: %s\n",send_buffer); //line sent 
-	       printf("\nENCRYPTION --->>>: %s\n", temp_buffer);
 	       
 	       
 

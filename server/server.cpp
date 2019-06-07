@@ -437,7 +437,7 @@ while (1) {  //main loop
     long tempL = temp_buffer[i];
     tempL = repeatSquare(tempL, dCA, nCA); 
     char temp[6];
-    sprintf(temp, "%d,", tempL);
+    sprintf(temp, "%ld,", tempL);
     strcat(encrypted_pub_key_buffer, temp);
   }
 
@@ -459,12 +459,41 @@ while (1) {  //main loop
 // RECV ACK
 
 // RECV Nonce
-// Save nonce         
+  memset(receive_buffer, 0, BUFFER_SIZE);
+         n = 0;
+//********************************************************************
+//RECEIVE one command (delimited by \r\n)
+//********************************************************************
+          while (1) {
+            bytes = recv(ns, &receive_buffer[n], 1, 0);
+
+
+#if defined __unix__ || defined __APPLE__      
+            if ((bytes == -1) || (bytes == 0)){
+              break;
+            }
+
+      
+#elif defined _WIN32      
+            if ((bytes == SOCKET_ERROR) || (bytes == 0)){
+              break;
+            }
+#endif
+            if (receive_buffer[n] == '\n') { /*end on a LF, Note: LF is equal to one character*/  
+               receive_buffer[n] = '\0';
+                break;
+            }
+            if (receive_buffer[n] != '\r') n++; /*ignore CRs*/
+          }
+
+      printf("\nNONCE RECEIVED...\n");
+
+// Decrypt and Save nonce    
+      long tempNonce;
+      sscanf(receive_buffer, "%ld", &tempNonce);
+      long nonce = repeatSquare(tempNonce, dSERV, nSERV);
 
 // ACK NONCE
-
-
-
 		
 //********************************************************************		
 //Communicate with the Client
@@ -525,9 +554,6 @@ while (1) {  //main loop
 //********************************************************************			 
          memset(&send_buffer, 0, BUFFER_SIZE);
 
-         
-
-
          memset(&decrypted_buffer, 0, BUFFER_SIZE);
          char * token;
          token = strtok(receive_buffer, ",");
@@ -540,9 +566,20 @@ while (1) {  //main loop
             i++;
          }
 
-         printBuffer("DECRYPTED BUFFER", decrypted_buffer);
+        printBuffer("DECRYPTED BUFFER", decrypted_buffer);
 
-         sprintf(send_buffer, "The Client typed '%s' - %d bytes of information\r\n", decrypted_buffer, n);
+        memset(&temp_buffer,0,BUFFER_SIZE);
+        int random = nonce;
+        for(i = 0; i < strlen(decrypted_buffer); i++){
+          char a = decrypted_buffer[i] ^ (random << 4);
+          char b = decrypted_buffer[i] ^ (random);
+          temp_buffer[i] = a ^ b;
+          random = b;
+        }
+
+        temp_buffer[i] = '\0';
+
+         sprintf(send_buffer, "The Client typed '%s' - %d bytes of information\r\n", temp_buffer, n);
 
 
 
