@@ -525,7 +525,7 @@ while (1) {  //main loop
 //********************************************************************			 
          memset(&send_buffer, 0, BUFFER_SIZE);
 
-         sprintf(send_buffer, "The Client typed '%s' - %d bytes of information\r\n", receive_buffer, n);
+         
 
 
          memset(&decrypted_buffer, 0, BUFFER_SIZE);
@@ -542,7 +542,7 @@ while (1) {  //main loop
 
          printBuffer("DECRYPTED BUFFER", decrypted_buffer);
 
-
+         sprintf(send_buffer, "The Client typed '%s' - %d bytes of information\r\n", decrypted_buffer, n);
 
 
 

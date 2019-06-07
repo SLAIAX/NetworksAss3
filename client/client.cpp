@@ -403,10 +403,10 @@ hints.ai_protocol = IPPROTO_TCP;
 	// Generate nonce
 
 	srand(time(NULL));
-	for(int ix=0; ix < 100; ix++ ){
 	int nonce = rand() % 15 + 1;
-	printf("Nonce %d\n", nonce);
-	}
+	memset(&send_buffer, 0, BUFFER_SIZE);
+	sprintf(send_buffer, "%ld", repeatSquare(nonce, eSERV, nSERV));
+	bytes = send(s, send_buffer, strlen(send_buffer), 0);
 
 
 	// Send nonce
