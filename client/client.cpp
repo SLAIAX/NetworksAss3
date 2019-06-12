@@ -78,6 +78,7 @@ long repeatSquare(long x, long e, long n) {
 			e = e-1;
 		}
 	}
+	cout << y << endl; 
 	return y; //the result is stored in y
 }
 
@@ -381,7 +382,7 @@ hints.ai_protocol = IPPROTO_TCP;
 	         if (receive_buffer[n] != '\r') n++;   /*ignore CR's*/
 	}
 	      
-	printf("\nRECEIVING PUBLIC KEY FROM SERVER...\n\nDECRYPTING PUBLIC KEY FROM SERVER...\n");
+	printf("\nRECEIVING PUBLIC KEY FROM SERVER...\n%s\nDECRYPTING PUBLIC KEY FROM SERVER...\n", receive_buffer);
 	// DECRYPT eSERV and nSERV
 
 	memset(&temp_buffer, 0, BUFFER_SIZE*5);
@@ -397,21 +398,21 @@ hints.ai_protocol = IPPROTO_TCP;
     }
 
     sscanf(temp_buffer, "%ld,%ld", &eSERV, &nSERV);
-
+    printf("\nPUBLIC KEY E = %ld, KEY N = %ld", eSERV, nSERV);
 	// ACK receipt
 	printf("\nACKNOWLEDGING RECEIPT OF KEY...\n");
 
 	// Generate nonce
 
 	srand(time(NULL));
-	int nonce = rand() % 15 + 1;
+	int nonce = rand() % 255;
 
 	// Send nonce
 	memset(&send_buffer, 0, BUFFER_SIZE);
 	sprintf(send_buffer, "%ld\r\n", repeatSquare(nonce, eSERV, nSERV));
 	bytes = send(s, send_buffer, strlen(send_buffer), 0);
 
-	printf("\nSENDING NONCE...\n");
+	printf("\nSENDING NONCE...\n%d\n", nonce);
 	
 	// RECV ACK for nonce 
 	
@@ -439,29 +440,25 @@ hints.ai_protocol = IPPROTO_TCP;
 	//OUR ADDITIONS
 	//*******************************************************************
 
-		   char binary_buffer[BUFFER_SIZE];
-		   memset(binary_buffer, 0, BUFFER_SIZE);
+		   char binary_buffer[BUFFER_SIZE*5];
+		   memset(binary_buffer, 0, BUFFER_SIZE*5);
 		   int random = nonce;
+		   binary_buffer[0] = '\0';
 		   for(int i = 0; i < strlen(temp_buffer); i++){
-		   	 	char a = temp_buffer[i] ^ (random << 4);
-		   	 	char b = temp_buffer[i] ^ (random);
-		   	 	binary_buffer[i] = a ^ b;
-		   	 	random = b;
+		   	 	char a = temp_buffer[i] ^ random;
+		   	 	long tempEncrypt = repeatSquare(a, eSERV, nSERV);
+		   	 	char tempString[80];
+		   	 	memset(tempString, 0, 80);
+		   	 	sprintf(tempString, "%ld ", tempEncrypt);
+		   	 	strcat(binary_buffer, tempString);
+		   	 	random = tempEncrypt;
 		   }
 
 		   printBuffer("BINARY BUFFER", binary_buffer);
-	       
-	       memset(temp_buffer, 0, strlen(temp_buffer));
-	       for(int i = 0; i < strlen(binary_buffer); i++){
-	       		long tempL = binary_buffer[i];
-	       		tempL = repeatSquare(tempL, eSERV, nSERV); //Encryption
-	       		char temp[6];
-	       		sprintf(temp, "%ld,", tempL);
-	       		strcat(temp_buffer, temp);
-	       	}
-	       	strcat(temp_buffer, "");
-	       	strcat(temp_buffer,"\r\n");
-	       	sprintf(send_buffer, "%s", temp_buffer);
+	      
+	       	strcat(binary_buffer, "");
+	       	strcat(binary_buffer,"\r\n");
+	       	sprintf(send_buffer, "%s", binary_buffer);
 
 	//*******************************************************************
 	//SEND

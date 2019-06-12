@@ -72,7 +72,8 @@ long repeatSquare(long x, long e, long n) {
       y = (x*y) % n;
       e = e-1;
     }
-  } 
+  }
+  cout << y << endl; 
   return y; //the result is stored in y
 }
 
@@ -453,7 +454,7 @@ while (1) {  //main loop
 #elif defined _WIN32      
          if ((bytes == SOCKET_ERROR) || (bytes == 0)) break;
 #endif
-         printf("\nSENDING PUBLIC KEY TO CLIENT...\n");
+         printf("\nSENDING PUBLIC KEY TO CLIENT...\n%s\n", encrypted_pub_key_buffer);
          memset(&send_buffer,0,BUFFER_SIZE);
 
 // RECV ACK
@@ -555,31 +556,29 @@ while (1) {  //main loop
          memset(&send_buffer, 0, BUFFER_SIZE);
 
          memset(&decrypted_buffer, 0, BUFFER_SIZE);
-         char * token;
-         token = strtok(receive_buffer, ",");
-         int i =0;
-         while(token != NULL){
-            long temp = atol(token);
-            char c = repeatSquare(temp, dSERV, nSERV);
-            decrypted_buffer[i] = c;
-            token = strtok(NULL, ",");
-            i++;
-         }
+        
+        char * token;
+        token = strtok(receive_buffer, " ");
+        int i = 0;
+        int random = nonce;
+        int tempRandom;
+        while(token != NULL){
+          long temp = atol(token);
+          tempRandom = temp;
+          char c = repeatSquare(temp, dSERV, nSERV);
+          decrypted_buffer[i] = c ^ random;
+          token = strtok(NULL, " ");
+          i++;
+          random = tempRandom;
+        }
+
+        decrypted_buffer[i] = '\0';
 
         printBuffer("DECRYPTED BUFFER", decrypted_buffer);
 
-        memset(&temp_buffer,0,BUFFER_SIZE);
-        int random = nonce;
-        for(i = 0; i < strlen(decrypted_buffer); i++){
-          char a = decrypted_buffer[i] ^ (random << 4);
-          char b = decrypted_buffer[i] ^ (random);
-          temp_buffer[i] = a ^ b;
-          random = b;
-        }
+        
 
-        temp_buffer[i] = '\0';
-
-         sprintf(send_buffer, "The Client typed '%s' - %d bytes of information\r\n", temp_buffer, n);
+         sprintf(send_buffer, "The Client typed '%s' - %d bytes of information\r\n", decrypted_buffer, n);
 
 
 
