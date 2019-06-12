@@ -574,8 +574,10 @@ while (1) {  //main loop
 =======
         for(i = 0; i < strlen(decrypted_buffer); i++){
           char a = decrypted_buffer[i] ^ (random << 4);
+          a = a & 0xF0;
           char b = decrypted_buffer[i] ^ (random);
-          temp_buffer[i] = a ^ b;
+          b = b & 0x0F;
+          temp_buffer[i] = (a | b);
           random = b;
 >>>>>>> parent of 351ecbc... Fixed binary representation
         }
