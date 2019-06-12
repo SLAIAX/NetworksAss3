@@ -421,6 +421,7 @@ hints.ai_protocol = IPPROTO_TCP;
 //*******************************************************************
 	printf("\n--------------------------------------------\n");
 	printf("you may now start sending commands to the <<<SERVER>>>\n");
+	
 	printf("\nType here:");
 	memset(&temp_buffer,0,BUFFER_SIZE);
     if(fgets(temp_buffer,SEGMENT_SIZE,stdin) == NULL){
@@ -430,7 +431,7 @@ hints.ai_protocol = IPPROTO_TCP;
     
 	//while ((strncmp(send_buffer,".",1) != 0) && (strncmp(send_buffer,"\n",1) != 0)) {
 	while ((strncmp(temp_buffer,".",1) != 0)) {
-		   send_buffer[strlen(temp_buffer)-1]='\0';//strip '\n'
+		   temp_buffer[strlen(temp_buffer)-1]='\0';//strip '\n'
 		   printBuffer("SEND_BUFFER", temp_buffer);
 		   printf("Message length: %d \n",(int)strlen(temp_buffer));
 
@@ -481,7 +482,7 @@ hints.ai_protocol = IPPROTO_TCP;
 	      	 exit(1);
 	      }
 #endif
-	      
+	      memset(receive_buffer, 0, BUFFER_SIZE);
 	      n = 0;
 	      while (1) {
 	//*******************************************************************
@@ -502,7 +503,6 @@ hints.ai_protocol = IPPROTO_TCP;
 	         }
 #endif
 
-	         
 	         if (receive_buffer[n] == '\n') {  /*end on a LF*/
 	            receive_buffer[n] = '\0';
 	            break;
@@ -513,15 +513,13 @@ hints.ai_protocol = IPPROTO_TCP;
 	      printf("MSG RECEIVED --->>>: %s\n",receive_buffer);
 	      // printf("<<<SERVER's Reply>>>:%s\n",receive_buffer);
 			
-			//get another user input
-	      memset(&send_buffer, 0, BUFFER_SIZE);
+		  //get another user input
+	      memset(&temp_buffer, 0, BUFFER_SIZE);
           printf("\nType here:");
-	      if(fgets(send_buffer,SEGMENT_SIZE,stdin) == NULL){
+	      if(fgets(temp_buffer,SEGMENT_SIZE,stdin) == NULL){
 		     printf("error using fgets()\n");
 		     exit(1);
 	     }
-	     
-		
 	}
 	printf("\n--------------------------------------------\n");
 	printf("<<<CLIENT>>> is shutting down...\n");

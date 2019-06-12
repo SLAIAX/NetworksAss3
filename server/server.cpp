@@ -578,7 +578,7 @@ while (1) {  //main loop
 
         
 
-         sprintf(send_buffer, "The Client typed '%s' - %d bytes of information\r\n", decrypted_buffer, n);
+        sprintf(send_buffer, "The Client typed '%s' - %d bytes of information\r\n", decrypted_buffer, n);
 
 
 
