@@ -561,6 +561,7 @@ while (1) {  //main loop
         token = strtok(receive_buffer, " ");
         int i = 0;
         int random = nonce;
+<<<<<<< HEAD
         int tempRandom;
         while(token != NULL){
           long temp = atol(token);
@@ -570,6 +571,13 @@ while (1) {  //main loop
           token = strtok(NULL, " ");
           i++;
           random = tempRandom;
+=======
+        for(i = 0; i < strlen(decrypted_buffer); i++){
+          char a = decrypted_buffer[i] ^ (random << 4);
+          char b = decrypted_buffer[i] ^ (random);
+          temp_buffer[i] = a ^ b;
+          random = b;
+>>>>>>> parent of 351ecbc... Fixed binary representation
         }
 
         decrypted_buffer[i] = '\0';

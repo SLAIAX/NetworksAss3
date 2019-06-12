@@ -445,6 +445,7 @@ hints.ai_protocol = IPPROTO_TCP;
 		   int random = nonce;
 		   binary_buffer[0] = '\0';
 		   for(int i = 0; i < strlen(temp_buffer); i++){
+<<<<<<< HEAD
 		   	 	char a = temp_buffer[i] ^ random;
 		   	 	long tempEncrypt = repeatSquare(a, eSERV, nSERV);
 		   	 	char tempString[80];
@@ -452,6 +453,12 @@ hints.ai_protocol = IPPROTO_TCP;
 		   	 	sprintf(tempString, "%ld ", tempEncrypt);
 		   	 	strcat(binary_buffer, tempString);
 		   	 	random = tempEncrypt;
+=======
+		   	 	char a = temp_buffer[i] ^ (random << 4);
+		   	 	char b = temp_buffer[i] ^ (random);
+		   	 	binary_buffer[i] = a ^ b;
+		   	 	random = b;
+>>>>>>> parent of 351ecbc... Fixed binary representation
 		   }
 
 		   printBuffer("BINARY BUFFER", binary_buffer);
