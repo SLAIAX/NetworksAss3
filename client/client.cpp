@@ -42,6 +42,7 @@
 
   WSADATA wsadata; //Create a WSADATA object called wsadata. 
 #endif
+  #include "InfInt.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -65,28 +66,28 @@ void printBuffer(const char *header, char *buffer){
 	cout << "---" << endl;
 }
 
-long repeatSquare(long x, long e, long n) {
+InfInt repeatSquare(InfInt  x, InfInt  e, InfInt  n) {
 
-	long y=1;//initialize y to 1, very important
-	while (e >  0) {
-		if (( e % 2 ) == 0) {
-			x = (x*x) % n;
-			e = e/2;
-		}
-		else {
-			y = (x*y) % n;
-			e = e-1;
-		}
-	}
-	cout << y << endl; 
-	return y; //the result is stored in y
+  InfInt y=1;//initialize y to 1, very important
+  while (e >  0) {
+    if (( e % 2 ) == 0) {
+      x = (x*x) % n;
+      e = e/2;
+    }
+    else {
+      y = (x*y) % n;
+      e = e-1;
+    }
+  }
+  cout << y << endl; 
+  return y; //the result is stored in y
 }
 
 // Variables
-long nCA = 8633;
-long eCA = 7;
-long nSERV;
-long eSERV;
+InfInt nCA = 8633;
+InfInt eCA = 7;
+InfInt nSERV;
+InfInt eSERV;
 
 
 /////////////////////////////////////////////////////////////////////
@@ -104,7 +105,7 @@ int main(int argc, char *argv[]) {
    SOCKET s;
 #endif
 
-#define BUFFER_SIZE 200 
+#define BUFFER_SIZE 300 
 //remember that the BUFFESIZE has to be at least big enough to receive the answer from the server
 #define SEGMENT_SIZE 70
 //segment size, i.e., if fgets gets more than this number of bytes it segments the message
@@ -391,14 +392,19 @@ hints.ai_protocol = IPPROTO_TCP;
 	int i = 0;
 	while(token != NULL){
 	    long temp = atol(token);
-	    char c = repeatSquare(temp, eCA, nCA);
+	    char c = (repeatSquare(temp, eCA, nCA)).toInt();
 	    temp_buffer[i] = c;
 	    token = strtok(NULL, ",");
 	    i++;
     }
-
-    sscanf(temp_buffer, "%ld,%ld", &eSERV, &nSERV);
-    printf("\nPUBLIC KEY E = %ld, KEY N = %ld", eSERV, nSERV);
+    char eTemp[120];
+    char nTemp[120];
+    sscanf(temp_buffer, "%s,%s", eTemp, nTemp);
+    string temp = eTemp;
+    eSERV = temp;
+    temp = nTemp;
+    nSERV = temp;
+    cout << endl <<  "PUBLIC KEY E = " << eSERV.toString() << ", KEY N = " << nSERV.toString() << endl;
 	// ACK receipt
 	printf("\nACKNOWLEDGING RECEIPT OF KEY...\n");
 
@@ -409,7 +415,7 @@ hints.ai_protocol = IPPROTO_TCP;
 
 	// Send nonce
 	memset(&send_buffer, 0, BUFFER_SIZE);
-	sprintf(send_buffer, "%ld\r\n", repeatSquare(nonce, eSERV, nSERV));
+	sprintf(send_buffer, "%s\r\n", ((repeatSquare(nonce, eSERV, nSERV)).toString()).c_str());
 	bytes = send(s, send_buffer, strlen(send_buffer), 0);
 
 	printf("\nSENDING NONCE...\n%d\n", nonce);
@@ -447,7 +453,7 @@ hints.ai_protocol = IPPROTO_TCP;
 		   binary_buffer[0] = '\0';
 		   for(int i = 0; i < strlen(temp_buffer); i++){
 		   	 	char a = temp_buffer[i] ^ random;
-		   	 	long tempEncrypt = repeatSquare(a, eSERV, nSERV);
+		   	 	long tempEncrypt = (repeatSquare(a, eSERV, nSERV)).toLong();
 		   	 	char tempString[80];
 		   	 	memset(tempString, 0, 80);
 		   	 	sprintf(tempString, "%ld ", tempEncrypt);

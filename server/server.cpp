@@ -19,6 +19,7 @@
   #include <errno.h>
   #include <stdlib.h>
   #include <stdio.h>
+  #include <time.h>
   #include <string.h>
   #include <sys/types.h>  //// Structures and functions used for socket API
   #include <sys/socket.h> // Structures and functions used for socket API
@@ -30,6 +31,7 @@
   #include <ws2tcpip.h> //required by getaddrinfo() and special constants
   #include <stdlib.h>
   #include <stdio.h>
+  #include <time.h>
   #include <iostream>
   #define WSVERS MAKEWORD(2,2) /* Use the MAKEWORD(lowbyte, highbyte) macro declared in Windef.h */
                     //The high-order byte specifies the minor version number; 
@@ -37,6 +39,8 @@
 
   WSADATA wsadata; //Create a WSADATA object called wsadata. 
 #endif
+
+  #include "InfInt.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -46,6 +50,92 @@
 using namespace std;
 
 //*******************************************************************
+
+//===============================================================================================
+// COPIED CODE - START - FUNCTIONS FOR CALCULATIONS
+//===============================================================================================
+
+// Utility function to do modular exponentiation. 
+// It returns (x^y) % p 
+int power(int x, unsigned int y, int p) 
+{ 
+    int res = 1;      // Initialize result 
+    x = x % p;  // Update x if it is more than or 
+                // equal to p 
+    while (y > 0) 
+    { 
+        // If y is odd, multiply x with result 
+        if (y & 1) 
+            res = (res*x) % p; 
+  
+        // y must be even now 
+        y = y>>1; // y = y/2 
+        x = (x*x) % p; 
+    } 
+    return res; 
+} 
+  
+// This function is called for all k trials. It returns 
+// false if n is composite and returns false if n is 
+// probably prime. 
+// d is an odd number such that  d*2<sup>r</sup> = n-1 
+// for some r >= 1 
+bool miillerTest(int d, int n) 
+{ 
+    // Pick a random number in [2..n-2] 
+    // Corner cases make sure that n > 4 
+    int a = 2 + rand() % (n - 4); 
+  
+    // Compute a^d % n 
+    int x = power(a, d, n); 
+  
+    if (x == 1  || x == n-1) 
+       return true; 
+  
+    // Keep squaring x while one of the following doesn't 
+    // happen 
+    // (i)   d does not reach n-1 
+    // (ii)  (x^2) % n is not 1 
+    // (iii) (x^2) % n is not n-1 
+    while (d != n-1) 
+    { 
+        x = (x * x) % n; 
+        d *= 2; 
+  
+        if (x == 1)      return false; 
+        if (x == n-1)    return true; 
+    } 
+  
+    // Return composite 
+    return false; 
+} 
+  
+// It returns false if n is composite and returns true if n 
+// is probably prime.  k is an input parameter that determines 
+// accuracy level. Higher value of k indicates more accuracy. 
+bool isPrime(int n, int k) 
+{ 
+    // Corner cases 
+    if (n <= 1 || n == 4)  return false; 
+    if (n <= 3) return true; 
+  
+    // Find r such that n = 2^d * r + 1 for some r >= 1 
+    int d = n - 1; 
+    while (d % 2 == 0) 
+        d /= 2; 
+  
+    // Iterate given nber of 'k' times 
+    for (int i = 0; i < k; i++) 
+         if (!miillerTest(d, n)) 
+              return false; 
+  
+    return true; 
+} 
+
+//===============================================================================================
+// COPIED CODE - FINISH - FUNCTIONS FOR CALCULATIONS
+//===============================================================================================
+
 void printBuffer(const char *header, char *buffer){
   cout << "------" << header << "------" << endl;
   for(unsigned int i=0; i < strlen(buffer); i++){
@@ -60,9 +150,9 @@ void printBuffer(const char *header, char *buffer){
   cout << "---" << endl;
 }
 
-long repeatSquare(long x, long e, long n) {
+InfInt repeatSquare(InfInt  x, InfInt  e, InfInt  n) {
 
-  long y=1;//initialize y to 1, very important
+  InfInt y=1;//initialize y to 1, very important
   while (e >  0) {
     if (( e % 2 ) == 0) {
       x = (x*x) % n;
@@ -77,17 +167,114 @@ long repeatSquare(long x, long e, long n) {
   return y; //the result is stored in y
 }
 
+InfInt findD(InfInt  z, InfInt  e){
+  int i = 2;
+  InfInt  x[1000];
+  InfInt  y[1000];
+  InfInt  w[1000];
+  InfInt  k[1000];
+
+  x[0] = 1;
+  x[1] = 0;
+  y[0] = 0;
+  y[1] = 1;
+  w[0] = z;
+  w[1] = e;
+  k[1] = z/e;
+
+  cout << "X: " << x[0].toString() << "\t";
+  cout << "Y: " << y[0].toString() << "\t";
+  cout << "W: " << w[0].toString() << "\t";
+  cout << "K: -" << endl;
+
+  cout << "X: " << x[1].toString() << "\t";
+  cout << "Y: " << y[1].toString() << "\t";
+  cout << "W: " << w[1].toString() << "\t";
+  cout << "K: " << k[1].toString() << endl;
+
+  while(true){
+    x[i] = x[i-2] + -(k[i-1] * x[i-1]);
+    y[i] = y[i-2] + -(k[i-1] * y[i-1]);
+    w[i] = w[i-2] + -(k[i-1] * w[i-1]);
+    k[i] = w[i-1]/w[i];
+    cout << "X: " << x[i].toString() << "\t";
+    cout << "Y: " << y[i].toString() << "\t";
+    cout << "W: " << w[i].toString() << "\t";
+    cout << "K: " << k[i].toString() << endl;
+    if(w[i] == 1) break;
+    i++;
+  }
+  if(y[i] < 0) y[i] += z;
+  cout << "in func" << y[i].toString() << endl;
+  return y[i];
+}
+
+InfInt gcd(InfInt a, InfInt b){
+    InfInt r;
+    if (a < 0) a = -a;
+    if (b < 0) b = -b;
+    if (b > a) { /* swap */
+        r = b; b = a; a = r;
+    }
+    while (b > 0) {
+        r = a % b;
+        a = b;
+        b = r;
+    }
+    return a;
+}
+
+int generatePrime(){
+  int n = rand() % INT_MAX;
+  while(true){
+    if(isPrime(n, 5)){
+      return n;
+    } 
+    if(n > 0){
+      n--;
+    } else{
+      n = rand() % INT_MAX;
+    }
+  }
+}
+
+InfInt generateE(InfInt z, InfInt n){
+  InfInt e = 2;
+  while(gcd(e, z) != 1){
+    e++;
+  }
+  return e;
+}
+
+
 //Variables
-long nCA = 8633;
-long dCA = 1207;
-long eSERV = 27;
-long nSERV = 29893;
-long dSERV = 8755;
+InfInt  nCA = 8633;
+InfInt  dCA = 1207;
 
 //*******************************************************************
 //MAIN
 //*******************************************************************
 int main(int argc, char *argv[]) {
+  srand(time(NULL));
+
+  int p = generatePrime();
+  cout << p << endl;
+  int q = generatePrime();
+  cout << q << endl;
+
+
+  InfInt nSERV = p * q;
+  InfInt zSERV = (p-1)*(q-1);
+
+  InfInt eSERV = generateE(zSERV, nSERV);
+  
+  InfInt dSERV = findD(zSERV, eSERV);
+
+  cout << "NSERV = " << nSERV.toString() << endl;
+  cout << "ZSERV = " << zSERV.toString() << endl;
+  cout << "ESERV = " << eSERV.toString() << endl;
+  cout << "DSERV = " << dSERV.toString() << endl;
+
 	
 //********************************************************************
 // INITIALIZATION of the SOCKET library
@@ -103,7 +290,7 @@ int main(int argc, char *argv[]) {
   SOCKET s, ns;
 #endif
 
-#define BUFFER_SIZE 200 
+#define BUFFER_SIZE 300 
 
   char send_buffer[BUFFER_SIZE],receive_buffer[BUFFER_SIZE], decrypted_buffer[BUFFER_SIZE];
   int  n,bytes,addrlen;
@@ -435,10 +622,11 @@ while (1) {  //main loop
   sprintf(temp_buffer, "%ld,%ld", eSERV, nSERV);
 
   for(int i = 0; i < strlen(temp_buffer); i++){
-    long tempL = temp_buffer[i];
+    InfInt  tempL = temp_buffer[i];
     tempL = repeatSquare(tempL, dCA, nCA); 
-    char temp[6];
-    sprintf(temp, "%ld,", tempL);
+    char temp[1000];
+    strcpy(temp, (tempL.toString()).c_str());
+    strcat(temp, ",");
     strcat(encrypted_pub_key_buffer, temp);
   }
 
@@ -492,7 +680,8 @@ while (1) {  //main loop
 // Decrypt and Save nonce    
       long tempNonce;
       sscanf(receive_buffer, "%ld", &tempNonce);
-      long nonce = repeatSquare(tempNonce, dSERV, nSERV);
+      InfInt nonce = tempNonce; 
+      nonce = repeatSquare(tempNonce, dSERV, nSERV);
 
 // ACK NONCE
 		
@@ -548,24 +737,24 @@ while (1) {  //main loop
 //PROCESS REQUEST
 //******************************************************************** 
 
-         printBuffer("RECEIVE_BUFFER", receive_buffer);
-         printf("\nMSG RECEIVED <<<--- :%s\n",receive_buffer);
+        printBuffer("RECEIVE_BUFFER", receive_buffer);
+        printf("\nMSG RECEIVED <<<--- :%s\n",receive_buffer);
          
       
 //********************************************************************			 
-         memset(&send_buffer, 0, BUFFER_SIZE);
+        memset(&send_buffer, 0, BUFFER_SIZE);
 
-         memset(&decrypted_buffer, 0, BUFFER_SIZE);
+        memset(&decrypted_buffer, 0, BUFFER_SIZE);
         
         char * token;
         token = strtok(receive_buffer, " ");
         int i = 0;
-        int random = nonce;
+        int random = nonce.toInt();
         int tempRandom;
         while(token != NULL){
           long temp = atol(token);
           tempRandom = temp;
-          char c = repeatSquare(temp, dSERV, nSERV);
+          char c = (repeatSquare(temp, dSERV, nSERV)).toInt();
           decrypted_buffer[i] = c ^ random;
           token = strtok(NULL, " ");
           i++;
