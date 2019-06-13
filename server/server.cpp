@@ -290,7 +290,7 @@ int main(int argc, char *argv[]) {
   SOCKET s, ns;
 #endif
 
-#define BUFFER_SIZE 300 
+#define BUFFER_SIZE 1000 
 
   char send_buffer[BUFFER_SIZE],receive_buffer[BUFFER_SIZE], decrypted_buffer[BUFFER_SIZE];
   int  n,bytes,addrlen;
@@ -613,20 +613,21 @@ while (1) {  //main loop
 
 // encrypt dCA(eSERV, nSERV)
 
+  cout << "SENDING eSERV = " << eSERV.toString() << " nSERV = " << nSERV.toString() << endl;
+
   char encrypted_pub_key_buffer[BUFFER_SIZE];
   memset(&encrypted_pub_key_buffer, 0, BUFFER_SIZE);
   encrypted_pub_key_buffer[0]='\0';
 
   char temp_buffer[BUFFER_SIZE];
   memset(&temp_buffer, 0, strlen(temp_buffer));
-  sprintf(temp_buffer, "%ld,%ld", eSERV, nSERV);
+  sprintf(temp_buffer, "%s %s", (eSERV.toString()).c_str(), (nSERV.toString()).c_str() );
 
   for(int i = 0; i < strlen(temp_buffer); i++){
-    InfInt  tempL = temp_buffer[i];
-    tempL = repeatSquare(tempL, dCA, nCA); 
-    char temp[1000];
-    strcpy(temp, (tempL.toString()).c_str());
-    strcat(temp, ",");
+    int tempL = temp_buffer[i];
+    tempL = (repeatSquare(tempL, dCA, nCA)).toInt(); 
+    char temp[10];
+    sprintf(temp, "%d,", tempL);
     strcat(encrypted_pub_key_buffer, temp);
   }
 
@@ -682,6 +683,7 @@ while (1) {  //main loop
       sscanf(receive_buffer, "%ld", &tempNonce);
       InfInt nonce = tempNonce; 
       nonce = repeatSquare(tempNonce, dSERV, nSERV);
+      int random = nonce.toInt();
 
 // ACK NONCE
 		
@@ -749,7 +751,7 @@ while (1) {  //main loop
         char * token;
         token = strtok(receive_buffer, " ");
         int i = 0;
-        int random = nonce.toInt();
+        
         int tempRandom;
         while(token != NULL){
           long temp = atol(token);

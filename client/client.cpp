@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
    SOCKET s;
 #endif
 
-#define BUFFER_SIZE 300 
+#define BUFFER_SIZE 1000 
 //remember that the BUFFESIZE has to be at least big enough to receive the answer from the server
 #define SEGMENT_SIZE 70
 //segment size, i.e., if fgets gets more than this number of bytes it segments the message
@@ -399,12 +399,15 @@ hints.ai_protocol = IPPROTO_TCP;
     }
     char eTemp[120];
     char nTemp[120];
-    sscanf(temp_buffer, "%s,%s", eTemp, nTemp);
+
+    printBuffer("TEMP BUFFER", temp_buffer);
+
+    sscanf(temp_buffer, "%s %s", eTemp, nTemp);
     string temp = eTemp;
     eSERV = temp;
     temp = nTemp;
     nSERV = temp;
-    cout << endl <<  "PUBLIC KEY E = " << eSERV.toString() << ", KEY N = " << nSERV.toString() << endl;
+    cout << endl <<  "PUBLIC KEY eSERV = " << eSERV.toString() << ", KEY nSERV = " << nSERV.toString() << endl;
 	// ACK receipt
 	printf("\nACKNOWLEDGING RECEIPT OF KEY...\n");
 
@@ -412,6 +415,7 @@ hints.ai_protocol = IPPROTO_TCP;
 
 	srand(time(NULL));
 	int nonce = rand() % 255;
+	int random = nonce;
 
 	// Send nonce
 	memset(&send_buffer, 0, BUFFER_SIZE);
@@ -449,7 +453,7 @@ hints.ai_protocol = IPPROTO_TCP;
 
 		   char binary_buffer[BUFFER_SIZE*5];
 		   memset(binary_buffer, 0, BUFFER_SIZE*5);
-		   int random = nonce;
+		   
 		   binary_buffer[0] = '\0';
 		   for(int i = 0; i < strlen(temp_buffer); i++){
 		   	 	char a = temp_buffer[i] ^ random;
