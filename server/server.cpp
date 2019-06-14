@@ -183,7 +183,7 @@ InfInt gcd(InfInt a, InfInt b){
 
 InfInt generatePrime(){
   InfInt n = rand();
-  for(int i = 0; i < 5; i++){
+  for(int i = 0; i < 1  ; i++){
       InfInt randNum = rand();
       n *= randNum;
   }
@@ -192,18 +192,23 @@ InfInt generatePrime(){
     if(is_prime(n)){
       return n;
     } 
+    cout << n << endl;
     if(n > 0){
       n--;
     }
   }
 }
 
-InfInt generateE(InfInt z, InfInt n){
+InfInt generateE(InfInt z, InfInt n, InfInt p, InfInt q){
   InfInt e = 3;
-  while(gcd(e, z) != 1){
+  while( (gcd(e, z) != 1) || (e == p) || (e == q) ){
     e++;
   }
-  return e;
+  if(e < n){
+    return e;
+  } else{
+    return -1;
+  }
 }
 
 
@@ -229,8 +234,10 @@ int main(int argc, char *argv[]) {
     cout << "qSERV = " << q << endl;
     nSERV = p * q;
     zSERV = (p-1)*(q-1);
-    eSERV = generateE(zSERV, nSERV);
-    
+    eSERV = generateE(zSERV, nSERV, p, q);
+    if(eSERV == -1){
+      continue;
+    }
     dSERV = findD(zSERV, eSERV);
 
     check = (eSERV * dSERV) % zSERV;
