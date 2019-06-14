@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
    SOCKET s;
 #endif
 
-#define BUFFER_SIZE 1000 
+#define BUFFER_SIZE 2000 
 //remember that the BUFFESIZE has to be at least big enough to receive the answer from the server
 #define SEGMENT_SIZE 70
 //segment size, i.e., if fgets gets more than this number of bytes it segments the message
@@ -421,7 +421,7 @@ hints.ai_protocol = IPPROTO_TCP;
 	memset(&send_buffer, 0, BUFFER_SIZE);
 	sprintf(send_buffer, "%s\r\n", ((repeatSquare(nonce, eSERV, nSERV)).toString()).c_str());
 	bytes = send(s, send_buffer, strlen(send_buffer), 0);
-
+	printf("Length of encrypted nonce: %d\n", strlen(send_buffer));
 	printf("\nSENDING NONCE...\n%d\n", nonce);
 	
 	// RECV ACK for nonce 
