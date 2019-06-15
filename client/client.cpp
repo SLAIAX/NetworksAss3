@@ -79,7 +79,6 @@ InfInt repeatSquare(InfInt  x, InfInt  e, InfInt  n) {
       e = e-1;
     }
   }
-  //cout << y << endl; 
   return y; //the result is stored in y
 }
 
@@ -118,7 +117,6 @@ int main(int argc, char *argv[]) {
    char serverHost[NI_MAXHOST]; 
    char serverService[NI_MAXSERV];
 	
-   //memset(&sin, 0, sizeof(sin));
 
 #if defined __unix__ || defined __APPLE__
    //nothing to do here
@@ -173,14 +171,11 @@ int main(int argc, char *argv[]) {
 
 //********************************************************************
 // set the socket address structure.
-//
 //********************************************************************
 struct addrinfo *result = NULL;
 struct addrinfo hints;
 int iResult;
 
-
-//ZeroMemory(&hints, sizeof (hints)); //alternatively, for Windows only
 memset(&hints, 0, sizeof(struct addrinfo));
 
 
@@ -192,22 +187,16 @@ if(USE_IPV6){
 
 hints.ai_socktype = SOCK_STREAM;
 hints.ai_protocol = IPPROTO_TCP;
-//hints.ai_flags = AI_PASSIVE;// PASSIVE is only for a SERVER	
 	
 //*******************************************************************
 //	Dealing with user's arguments
 //*******************************************************************
- 
-   
 	
 	//if there are 3 parameters passed to the argv[] array.
    if (argc == 3){ 
-		//sin.sin_port = htons((u_short)atoi(argv[2])); //get Remote Port number
 	    sprintf(portNum,"%s", argv[2]);
 	    iResult = getaddrinfo(argv[1], portNum, &hints, &result);
-	   //iResult = getaddrinfo("0:0:0:0:0:0:0:1", portNum, &hints, &result); //works! test only!
 	} else {
-		//sin.sin_port = htons(1234); //use default port number
 	    printf("USAGE: ClientWindows IP-address [port]\n"); //missing IP address
 		sprintf(portNum,"%s", DEFAULT_PORT);
 		printf("Default portNum = %s\n",portNum);
@@ -233,7 +222,6 @@ hints.ai_protocol = IPPROTO_TCP;
  	s = INVALID_SOCKET;
 #endif
 
-	//s = socket(PF_INET, SOCK_STREAM, 0);
 	s = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
 	
 #if defined __unix__ || defined __APPLE__
@@ -251,25 +239,9 @@ hints.ai_protocol = IPPROTO_TCP;
   	}
 #endif
 
-   //sin.sin_family = AF_INET;
-//~ //*******************************************************************
-//~ //GETHOSTBYNAME
-//~ //*******************************************************************
-   //~ if ((h=gethostbyname(argv[1])) != NULL) {
-      //~ memcpy(&sin.sin_addr,h->h_addr,h->h_length); //get remote IP address
-   //~ } else if ((sin.sin_addr.s_addr = inet_addr(argv[1])) == INADDR_NONE) {
-      //~ printf("An error occured when trying to translate to IP address\n");
-		//~ WSACleanup();
-   	//~ exit(1);
-   //~ }
 //*******************************************************************
 //CONNECT
 //*******************************************************************
-   //~ if (connect(s, (struct sockaddr *)&sin, sizeof(sin)) != 0) {
-      //~ printf("connect failed\n");
-		//~ WSACleanup();
-   	//~ exit(1);
-   //~ }
 	
 	 if (connect(s, result->ai_addr, result->ai_addrlen) != 0) {
         printf("connect failed\n");
@@ -279,38 +251,21 @@ hints.ai_protocol = IPPROTO_TCP;
 #endif 
    	    exit(1);
    } else {
-		//~ printf("connected to server.\n");
-		//~ struct sockaddr_in sa;
-      //~ char ipstr[INET_ADDRSTRLEN];
-		
-		// store this IP address in sa:
-      //inet_pton(AF_INET, result->ai_addr, &(sa.sin_addr));
-		
-		//-----------------------------------
-		//~ void *addr;
 		char ipver[80];
 		
 		// Get the pointer to the address itself, different fields in IPv4 and IPv6
 		if (result->ai_family == AF_INET)
 		{
 			// IPv4
-			//~ struct sockaddr_in *ipv4 = (struct sockaddr_in *)result->ai_addr;
-			//~ addr = &(ipv4->sin_addr);
 			strcpy(ipver,"IPv4");
 		}
 		else if(result->ai_family == AF_INET6)
 		{
 			// IPv6
-			//~ struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)result->ai_addr;
-			//~ addr = &(ipv6->sin6_addr);
 			strcpy(ipver,"IPv6");
 		}
 			
 		printf("\nConnected to <<<SERVER>>> with IP address: %s, %s at port: %s\n", argv[1], ipver,portNum);
-		
-		//--------------------------------------------------------------------------------
-	   //getnameinfo() can be used to extract the IP address of the SERVER, in case a hostname was
-		//              supplied by the user instead.
 
 #if defined __unix__ || defined __APPLE__     
        int returnValue;
@@ -320,24 +275,10 @@ hints.ai_protocol = IPPROTO_TCP;
 
 		memset(serverHost, 0, sizeof(serverHost));
 	    memset(serverService, 0, sizeof(serverService));
-		
-        //int addrlen = sizeof (struct sockaddr); 
-        // int addrlen = sizeof (*(result->ai_addr)); 
 
         returnValue=getnameinfo((struct sockaddr *)result->ai_addr, /*addrlen*/ result->ai_addrlen,
                serverHost, sizeof(serverHost),
                serverService, sizeof(serverService), NI_NUMERICHOST);
-
-		// returnValue=getnameinfo((struct sockaddr *)result->ai_addr, /* sizeof(*(result->ai_addr)) */&addrlen,
-  //              serverHost, sizeof(serverHost),
-  //              serverService, sizeof(serverService),
-	 //            NI_NUMERICHOST);
-
-
-		//~ getnameinfo(result->ai_addr, sizeof(*(result->ai_addr)),
-               //~ serverHost, sizeof(serverHost),
-               //~ serverService, sizeof(serverService),
-	            //~ NI_NAMEREQD); //works only if the DNS can resolve the hostname; otherwise, will result in an error
 
 		if(returnValue != 0){
 
@@ -350,7 +291,6 @@ hints.ai_protocol = IPPROTO_TCP;
 
 	    } else{
 		   printf("\nConnected to <<<SERVER>>> extracted IP address: %s, %s at port: %s\n", serverHost, ipver,/* serverService */ portNum);  //serverService is nfa
-	    	//printf("\nConnected to <<<SERVER>>> extracted IP address: %s, at port: %s\n", serverHost, serverService);
 	    }
 		//--------------------------------------------------------------------------------
 		
@@ -400,8 +340,6 @@ hints.ai_protocol = IPPROTO_TCP;
     char eTemp[120];
     char nTemp[120];
 
-    printBuffer("TEMP BUFFER", temp_buffer);
-
     sscanf(temp_buffer, "%s %s", eTemp, nTemp);
     string temp = eTemp;
     eSERV = temp;
@@ -442,7 +380,6 @@ hints.ai_protocol = IPPROTO_TCP;
 		exit(1);
 	}
     
-	//while ((strncmp(send_buffer,".",1) != 0) && (strncmp(send_buffer,"\n",1) != 0)) {
 	while ((strncmp(temp_buffer,".",1) != 0)) {
 		   temp_buffer[strlen(temp_buffer)-1]='\0';//strip '\n'
 		   printBuffer("SEND_BUFFER", temp_buffer);
@@ -526,7 +463,6 @@ hints.ai_protocol = IPPROTO_TCP;
 	      }
 	      
 	      printf("MSG RECEIVED --->>>: %s\n",receive_buffer);
-	      // printf("<<<SERVER's Reply>>>:%s\n",receive_buffer);
 			
 		  //get another user input
 	      memset(&temp_buffer, 0, BUFFER_SIZE);
@@ -548,8 +484,6 @@ hints.ai_protocol = IPPROTO_TCP;
     closesocket(s);//close listening socket
     WSACleanup(); /* call WSACleanup when done using the Winsock dll */  
 #endif
-
-
    return 0;
 }
 
