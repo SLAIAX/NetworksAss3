@@ -120,7 +120,7 @@ InfInt repeatSquare(InfInt  x, InfInt  e, InfInt  n) {
       e = e-1;
     }
   }
-  cout << y << endl; 
+  //cout << y << endl; 
   return y; //the result is stored in y
 }
 
@@ -239,7 +239,6 @@ int main(int argc, char *argv[]) {
       continue;
     }
     dSERV = findD(zSERV, eSERV);
-
     check = (eSERV * dSERV) % zSERV;
   }
 
@@ -653,9 +652,9 @@ while (1) {  //main loop
       printf("\nNONCE RECEIVED...\n");
 
 // Decrypt and Save nonce    
-      long tempNonce;
-      sscanf(receive_buffer, "%ld", &tempNonce);
-      printf("Received encrypted nonce: %ld\n", tempNonce);
+      char tempNonce[100];
+      sscanf(receive_buffer, "%s", tempNonce);
+      printf("Received encrypted nonce: %s\n", tempNonce);
       InfInt nonce = tempNonce; 
       cout << "Nonce before repeatSquare " << endl << nonce.toString() << endl;
       nonce = repeatSquare(nonce, dSERV, nSERV);
@@ -731,8 +730,8 @@ while (1) {  //main loop
         
         int tempRandom;
         while(token != NULL){
-          long temp = atol(token);
-          tempRandom = temp;
+          tempRandom = token[0];
+          InfInt temp = token;
           char c = (repeatSquare(temp, dSERV, nSERV)).toInt();
           decrypted_buffer[i] = c ^ random;
           token = strtok(NULL, " ");

@@ -79,7 +79,7 @@ InfInt repeatSquare(InfInt  x, InfInt  e, InfInt  n) {
       e = e-1;
     }
   }
-  cout << y << endl; 
+  //cout << y << endl; 
   return y; //the result is stored in y
 }
 
@@ -419,7 +419,10 @@ hints.ai_protocol = IPPROTO_TCP;
 
 	// Send nonce
 	memset(&send_buffer, 0, BUFFER_SIZE);
-	sprintf(send_buffer, "%s\r\n", ((repeatSquare(nonce, eSERV, nSERV)).toString()).c_str());
+	InfInt EncryptedNonce = repeatSquare(nonce, eSERV, nSERV);
+	cout << "UNENCRYPTED NONCE =" << nonce << endl;
+	cout << "ENCRYPTED NONCE =" << EncryptedNonce.toString() << endl;
+	sprintf(send_buffer, "%s\r\n", (EncryptedNonce.toString()).c_str());
 	bytes = send(s, send_buffer, strlen(send_buffer), 0);
 	printf("Length of encrypted nonce: %d\n", strlen(send_buffer));
 	printf("\nSENDING NONCE...\n%d\n", nonce);
@@ -457,12 +460,14 @@ hints.ai_protocol = IPPROTO_TCP;
 		   binary_buffer[0] = '\0';
 		   for(int i = 0; i < strlen(temp_buffer); i++){
 		   	 	char a = temp_buffer[i] ^ random;
-		   	 	long tempEncrypt = (repeatSquare(a, eSERV, nSERV)).toLong();
+		   	 	InfInt tempEncrypt = repeatSquare(a, eSERV, nSERV);
 		   	 	char tempString[80];
 		   	 	memset(tempString, 0, 80);
-		   	 	sprintf(tempString, "%ld ", tempEncrypt);
+		   	 	sprintf(tempString, "%s ", (tempEncrypt.toString()).c_str());
 		   	 	strcat(binary_buffer, tempString);
-		   	 	random = tempEncrypt;
+		   	 	//
+		   	 	char randomChar = tempString[0];
+		   	 	random = randomChar;
 		   }
 
 		   printBuffer("BINARY BUFFER", binary_buffer);
