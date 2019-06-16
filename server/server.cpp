@@ -218,7 +218,7 @@ InfInt  dCA = 1207;
 //*******************************************************************
 int main(int argc, char *argv[]) {
   srand(time(NULL));
-
+  printf("\nGENERATING CRYPTOGRAPHIC KEYS...\n");
   InfInt check = 0;
   InfInt nSERV;
   InfInt eSERV;
@@ -226,7 +226,9 @@ int main(int argc, char *argv[]) {
   InfInt zSERV;
   while(check != 1){
     InfInt p = generatePrime();
+    //p = "203956878356401977405765866929034577280193993314348263094772646453283062722701277632936616063144088173312372882677123879538709400158306567338328279154499698366071906766440037074217117805690872792848149112022286332144876183376326512083574821647933992961249917319836219304274280243803104015000563790123";
     InfInt q = generatePrime();
+    //q = "531872289054204184185084734375133399408303613982130856645299464930952178606045848877129147820387996428175564228204785846141207532462936339834139412401975338705794646595487324365194792822189473092273993580587964571659678084484152603881094176995594813302284232006001752128168901293560051833646881436219";
     nSERV = p * q;
     zSERV = (p-1)*(q-1);
     eSERV = generateE(zSERV, nSERV, p, q);
@@ -449,8 +451,6 @@ s = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
     if (listen( s, SOMAXCONN ) == SOCKET_ERROR ) {
 #endif
 
-	
-
 
 #if defined __unix__ || defined __APPLE__
       printf( "\nListen failed\n"); 
@@ -564,8 +564,6 @@ while (1) {  //main loop
 
 // encrypt dCA(eSERV, nSERV)
 
-  cout << "SENDING eSERV = " << eSERV.toString() << " nSERV = " << nSERV.toString() << endl;
-
   char encrypted_pub_key_buffer[BUFFER_SIZE];
   memset(&encrypted_pub_key_buffer, 0, BUFFER_SIZE);
   encrypted_pub_key_buffer[0]='\0';
@@ -594,7 +592,7 @@ while (1) {  //main loop
 #elif defined _WIN32      
          if ((bytes == SOCKET_ERROR) || (bytes == 0)) break;
 #endif
-         printf("\nSENDING PUBLIC KEY TO CLIENT...\n%s\n", encrypted_pub_key_buffer);
+         printf("\nSENDING PUBLIC KEY TO CLIENT...\n");
          memset(&send_buffer,0,BUFFER_SIZE);
 
 // RECV ACK
@@ -628,18 +626,27 @@ while (1) {  //main loop
           }
 
       printf("\nNONCE RECEIVED...\n");
+      printf("\nDECRYPTING NONCE...\n");
 
 // Decrypt and Save nonce    
       char tempNonce[100];
       sscanf(receive_buffer, "%s", tempNonce);
-      printf("Received encrypted nonce: %s\n", tempNonce);
       InfInt nonce = tempNonce; 
-      cout << "Nonce before repeatSquare " << endl << nonce.toString() << endl;
       nonce = repeatSquare(nonce, dSERV, nSERV);
-      cout << "Nonce after repeatSquare " << endl << nonce.toString() << endl;
       int random = nonce.toInt();
 
 // ACK NONCE
+      printf("\nACKNOWLEDGING NONCE...\n");
+
+      memset(&send_buffer, 0, BUFFER_SIZE);
+      strcpy(send_buffer, "ACK\r\n");
+      bytes = send(ns, send_buffer, strlen(send_buffer), 0);
+#if defined __unix__ || defined __APPLE__      
+         if ((bytes == -1) || (bytes == 0)) break;
+#elif defined _WIN32      
+         if ((bytes == SOCKET_ERROR) || (bytes == 0)) break;
+#endif
+
 		
 //********************************************************************		
 //Communicate with the Client
@@ -693,7 +700,9 @@ while (1) {  //main loop
 //PROCESS REQUEST
 //******************************************************************** 
 
-        printf("\nMSG RECEIVED <<<--- :%s\n",receive_buffer);
+        printf("\nMSG RECEIVED <<<---");
+
+        printf("\nThe received encrypted message was: %s\n", receive_buffer);
          
       
 //********************************************************************			 
@@ -717,11 +726,11 @@ while (1) {  //main loop
         }
 
         decrypted_buffer[i] = '\0';
+
+        printf("\nAfter decryption, the message found is: %s\n", decrypted_buffer);
         
 
         sprintf(send_buffer, "The Client typed '%s' - %d bytes of information\r\n", decrypted_buffer, n);
-
-
 
 //SEND
 //********************************************************************         
@@ -769,5 +778,3 @@ while (1) {  //main loop
 	 
     return 0;
 }
-
-

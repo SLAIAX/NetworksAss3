@@ -296,6 +296,7 @@ hints.ai_protocol = IPPROTO_TCP;
 		
 	}
 
+	printf("\nRECEIVING PUBLIC KEY FROM SERVER...\n");
 	// Receive nSERV and eSERV
 	memset(receive_buffer, 0, strlen(receive_buffer));
 	n = 0;
@@ -323,7 +324,8 @@ hints.ai_protocol = IPPROTO_TCP;
 	         if (receive_buffer[n] != '\r') n++;   /*ignore CR's*/
 	}
 	      
-	printf("\nRECEIVING PUBLIC KEY FROM SERVER...\n%s\nDECRYPTING PUBLIC KEY FROM SERVER...\n", receive_buffer);
+	
+	printf("\nDECRYPTING PUBLIC KEY FROM SERVER...\n");
 	// DECRYPT eSERV and nSERV
 
 	memset(&temp_buffer, 0, BUFFER_SIZE*5);
@@ -345,7 +347,6 @@ hints.ai_protocol = IPPROTO_TCP;
     eSERV = temp;
     temp = nTemp;
     nSERV = temp;
-    cout << endl <<  "PUBLIC KEY eSERV = " << eSERV.toString() << ", KEY nSERV = " << nSERV.toString() << endl;
 	// ACK receipt
 	printf("\nACKNOWLEDGING RECEIPT OF KEY...\n");
 
@@ -358,14 +359,43 @@ hints.ai_protocol = IPPROTO_TCP;
 	// Send nonce
 	memset(&send_buffer, 0, BUFFER_SIZE);
 	InfInt EncryptedNonce = repeatSquare(nonce, eSERV, nSERV);
-	cout << "UNENCRYPTED NONCE =" << nonce << endl;
-	cout << "ENCRYPTED NONCE =" << EncryptedNonce.toString() << endl;
 	sprintf(send_buffer, "%s\r\n", (EncryptedNonce.toString()).c_str());
 	bytes = send(s, send_buffer, strlen(send_buffer), 0);
-	printf("Length of encrypted nonce: %d\n", strlen(send_buffer));
-	printf("\nSENDING NONCE...\n%d\n", nonce);
+	printf("\nSENDING NONCE...\n");
 	
-	// RECV ACK for nonce 
+	// RECV ACK for nonce
+	printf("\nWAITING FOR SERVER ACK...\n");
+	memset(receive_buffer, 0, BUFFER_SIZE);
+	      n = 0;
+	      while (1) {
+	//*******************************************************************
+	//RECEIVE
+	//*******************************************************************
+	         bytes = recv(s, &receive_buffer[n], 1, 0);
+
+#if defined __unix__ || defined __APPLE__  
+		     if ((bytes == -1) || (bytes == 0)) {
+	            printf("recv failed\n");
+	         	exit(1);
+	         }   
+      
+#elif defined _WIN32      
+             if ((bytes == SOCKET_ERROR) || (bytes == 0)) {
+	            printf("recv failed\n");
+	         	exit(1);
+	         }
+#endif
+
+	         if (receive_buffer[n] == '\n') {  /*end on a LF*/
+	            receive_buffer[n] = '\0';
+	            break;
+	         }
+	         if (receive_buffer[n] != '\r') n++;   /*ignore CR's*/
+	      }
+
+	      printf("\nACK FOR NONCE RECEIVED...\n");
+
+
 	
 //*******************************************************************
 //Get input while user don't type "."
@@ -382,7 +412,6 @@ hints.ai_protocol = IPPROTO_TCP;
     
 	while ((strncmp(temp_buffer,".",1) != 0)) {
 		   temp_buffer[strlen(temp_buffer)-1]='\0';//strip '\n'
-		   printBuffer("SEND_BUFFER", temp_buffer);
 		   printf("Message length: %d \n",(int)strlen(temp_buffer));
 
 
@@ -406,8 +435,6 @@ hints.ai_protocol = IPPROTO_TCP;
 		   	 	char randomChar = tempString[0];
 		   	 	random = randomChar;
 		   }
-
-		   printBuffer("BINARY BUFFER", binary_buffer);
 	      
 	       	strcat(binary_buffer, "");
 	       	strcat(binary_buffer,"\r\n");
